@@ -1,26 +1,24 @@
-import 'dart:ffi';
-import 'dart:ui';
+import 'dart:typed_data';
+import 'dart:ui' show Color;
 
 class DataMode {
-  int modeNameLength;
   String modeName;
   int modeValue;
-  Uint8 modeFlags;
-  Uint8 modeSpeedMin;
-  Uint8 modeSpeedMax;
-  Uint8 modeBrightnessMin;
-  Uint8 modeBrightnessMax;
-  Uint8 modeColorsMin;
-  Uint8 modeColorsMax;
-  Uint8 modeSpeed;
-  Uint8 modeBrightness;
-  Uint8 modeDirection;
-  Uint8 modeColorMode;
-  Uint8 modeNumColors;
+  int modeFlags;
+  int modeSpeedMin;
+  int modeSpeedMax;
+  int modeBrightnessMin;
+  int modeBrightnessMax;
+  int modeColorsMin;
+  int modeColorsMax;
+  int modeSpeed;
+  int modeBrightness;
+  int modeDirection;
+  int modeColorMode;
+  int modeNumColors;
   Color color;
 
   DataMode({
-    required this.modeNameLength,
     required this.modeName,
     required this.modeValue,
     required this.modeFlags,
@@ -37,38 +35,45 @@ class DataMode {
     required this.modeNumColors,
     required this.color,
   });
+
+  factory DataMode.fromBuffer(Uint8List buffer) {
+    throw UnimplementedError();
+  }
 }
 
 class ZoneData {
-  Uint8 zoneNameLength;
   String zoneName;
   int zoneType;
-  Uint8 zoneLedsMin;
-  Uint8 zoneLedsMax;
-  Uint8 zoneLedsCount;
-  String zoneMatrixLength;
-  Uint8 zoneMatrixHeight;
-  Uint8 zoneMatrixWidth;
-  Uint8 zoneMatrixData;
+  int zoneLedsMin;
+  int zoneLedsMax;
+  int zoneLedsCount;
+  int zoneMatrixHeight;
+  int zoneMatrixWidth;
+  int zoneMatrixData;
 
   ZoneData({
-    required this.zoneNameLength,
     required this.zoneName,
     required this.zoneType,
     required this.zoneLedsMin,
     required this.zoneLedsMax,
     required this.zoneLedsCount,
-    required this.zoneMatrixLength,
     required this.zoneMatrixHeight,
     required this.zoneMatrixWidth,
     required this.zoneMatrixData,
   });
+
+  factory ZoneData.fromBuffer(Uint8List buffer) {
+    throw UnimplementedError();
+  }
 }
 
 class LedData {
-  Uint8 ledNameLength;
   String ledName;
-  Uint8 ledValue;
+  int ledValue;
 
-  LedData(this.ledNameLength, this.ledName, this.ledValue);
+  LedData(this.ledName, this.ledValue);
+
+  factory LedData.fromBuffer(Uint8List buffer) {
+    throw UnimplementedError();
+  }
 }
