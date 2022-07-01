@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:async';
 
+import 'package:openrgb/constants.dart';
 import 'package:quiver/async.dart';
 
 import 'header.dart';
@@ -11,64 +12,94 @@ import 'command.dart';
 class OpenRGBClient {
   final Socket _socket;
   final StreamBuffer<int> _streamBuffer;
+  late final int serverVersion;
+  int controllerCount = 0;
 
   OpenRGBClient._(this._socket, this._streamBuffer);
 
-  static Future<OpenRGBClient> connect(String host, int port) async {
+  static Future<OpenRGBClient> connect(
+    String host,
+    int port, {
+    String? clientName,
+  }) async {
     var socket = await Socket.connect(host, port);
     var streamBuffer = StreamBuffer<int>();
 
     socket.cast<List<int>>().pipe(streamBuffer);
-
     var client = OpenRGBClient._(socket, streamBuffer);
-    var nameBytes = const AsciiEncoder().convert('OpenRGB-dart');
-    var escapedBytes = Uint8List(nameBytes.length + 1);
-
-    escapedBytes.setRange(0, nameBytes.length, nameBytes);
-    escapedBytes[escapedBytes.length - 1] = 0;
-    await client._send(CommandId.setClientName, escapedBytes);
+    // Get Server version
+    await client._send(
+      CommandId.requestProtocolVersion,
+      Uint8List.fromList([3, 0, 0, 0]),
+    ); // V3
+    final response = await client._receive();
+    // Since it's LE, the first byte is the server's version.
+    client.serverVersion = response.restOfPkt.first;
+    // Send client name
+    final Uint8List nameBytes;
+    if (clientName != null) {
+      nameBytes = ascii.encode('$clientName\x00');
+    } else {
+      nameBytes = ascii.encode('OpenRGB-dart\x00');
+    }
+    await client._send(CommandId.setClientName, nameBytes);
 
     return client;
   }
 
-  Future _send(int commandId, Uint8List data, {int deviceId = 0}) async {
-    final header = NetPacketHeader(
+  Future<void> _send(int commandId, Uint8List data, {int deviceId = 0}) async {
+    final pkt = RawNetPacket(
       deviceIndex: deviceId,
       commandId: commandId,
-      dataLength: data.length,
+      restOfPkt: data,
     );
-    final headerData = header.toBytes();
-    final packet = Uint8List(headerData.length + data.length);
-    packet.setRange(0, headerData.length, headerData);
-    packet.setRange(headerData.length, packet.length, data);
-    _socket.add(packet);
+    _socket.add(pkt.toBytes());
     await _socket.flush();
   }
 
-  Future<Uint8List> _receive() async {
-    var headerBytes = Uint8List.fromList(await _streamBuffer.read(16));
+  Future<RawNetPacket> _receive() async {
+    // TODO: Make this another stream and queue messages in a streamqueue skipping server_only messages
+    final buffer = await _streamBuffer.read(kHeaderLength);
+    final headerData = Uint8List.fromList(buffer);
+    if (ascii.decode(headerData.sublist(0, 4)) != kHeaderMagic) {
+      throw Exception('Non-valid magic ID!');
+    }
 
-    var header = NetPacketHeader.parse(headerBytes);
+    final ByteData byteDataView = ByteData.sublistView(headerData, 4);
 
-    var packetBytes =
-        Uint8List.fromList(await _streamBuffer.read(header.dataLength));
+    final devIndex = byteDataView.getUint32(0, Endian.little);
+    final commandId = byteDataView.getUint32(4, Endian.little);
+    final dataLength = byteDataView.getUint32(8, Endian.little);
 
-    return Future.value(packetBytes);
+    return RawNetPacket(
+      deviceIndex: devIndex,
+      commandId: commandId,
+      restOfPkt: Uint8List.fromList(await _streamBuffer.read(dataLength)),
+    );
   }
 
   Future<int> getControllerCount() async {
     await _send(CommandId.requestControllerCount, Uint8List(0));
 
     final payload = await _receive();
-    final ByteData payloadByteData = ByteData.sublistView(payload);
-    return payloadByteData.getUint32(0, Endian.little);
+    final payloadByteData = ByteData.sublistView(payload.restOfPkt);
+    final count = payloadByteData.getUint32(0, Endian.little);
+    controllerCount = count;
+    return count;
   }
 
-  Future<int> getControllerData() async {
-    await _send(CommandId.requestControllerData, Uint8List(0));
+  Future<int> getControllerData(int deviceId) async {
+    if (deviceId <= controllerCount || deviceId >= controllerCount) {
+      throw Exception('No controller data for this device!');
+    }
+    await _send(
+      CommandId.requestControllerData,
+      Uint8List.fromList([3, 0, 0, 0]),
+      deviceId: deviceId,
+    );
 
     final payload = await _receive();
-    final ByteData payloadByteData = ByteData.sublistView(payload);
+    final payloadByteData = ByteData.sublistView(payload.restOfPkt);
     return payloadByteData.getUint32(0, Endian.little);
   }
 }

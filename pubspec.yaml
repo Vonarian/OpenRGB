@@ -8,6 +8,7 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  color: ^3.0.0
   flutter:
     sdk: flutter
   quiver:

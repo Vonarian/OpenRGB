@@ -1,5 +1,6 @@
 import 'dart:typed_data';
-import 'dart:ui' show Color;
+
+import 'package:color/color.dart';
 
 class DataMode {
   String modeName;
@@ -49,7 +50,7 @@ class ZoneData {
   int zoneLedsCount;
   int zoneMatrixHeight;
   int zoneMatrixWidth;
-  int zoneMatrixData;
+  List<int> zoneMatrix;
 
   ZoneData({
     required this.zoneName,
@@ -59,7 +60,7 @@ class ZoneData {
     required this.zoneLedsCount,
     required this.zoneMatrixHeight,
     required this.zoneMatrixWidth,
-    required this.zoneMatrixData,
+    required this.zoneMatrix,
   });
 
   factory ZoneData.fromBuffer(Uint8List buffer) {
