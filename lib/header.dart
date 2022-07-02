@@ -1,39 +1,18 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-class NetPacketHeader {
-  static const int headerLength = 16;
-  static const String magic = 'ORGB';
+import 'package:openrgb/constants.dart';
+
+class RawNetPacket {
   final int deviceIndex;
   final int commandId;
-  final int dataLength;
+  final Uint8List restOfPkt;
 
-  const NetPacketHeader({
+  const RawNetPacket({
     required this.deviceIndex,
     required this.commandId,
-    required this.dataLength,
+    required this.restOfPkt,
   });
-
-  factory NetPacketHeader.parse(Uint8List data) {
-    if (data.length != headerLength) {
-      throw Exception('Invalid header length');
-    }
-    if (ascii.decode(data.sublist(0, 4)) != magic) {
-      throw Exception('Non-valid magic ID!');
-    }
-
-    final ByteData byteDataView = ByteData.sublistView(data, 4);
-
-    final devIndex = byteDataView.getUint32(0, Endian.little);
-    final commandId = byteDataView.getUint32(4, Endian.little);
-    final dataLength = byteDataView.getUint32(8, Endian.little);
-
-    return NetPacketHeader(
-      deviceIndex: devIndex,
-      commandId: commandId,
-      dataLength: dataLength,
-    );
-  }
 
   Uint8List toBytes() {
     //structure:
@@ -41,13 +20,19 @@ class NetPacketHeader {
     //device index (4 bytes)
     //command ID (4 bytes)
     //data length (4 bytes)
+    // data in pkg (variable)
 
-    final buffer = Uint8List(headerLength);
-    buffer.setRange(0, 4, ascii.encode(magic));
+    final buffer = Uint8List(kHeaderLength + restOfPkt.lengthInBytes);
+    buffer.setRange(0, 4, ascii.encode(kHeaderMagic));
     final byteDataView = ByteData.view(buffer.buffer);
     byteDataView.setUint32(4, deviceIndex, Endian.little);
     byteDataView.setUint32(8, commandId, Endian.little);
-    byteDataView.setUint32(12, dataLength, Endian.little);
+    byteDataView.setUint32(12, restOfPkt.length, Endian.little);
+    buffer.setRange(
+      kHeaderLength,
+      kHeaderLength + restOfPkt.lengthInBytes,
+      restOfPkt,
+    );
     return buffer;
   }
 }
