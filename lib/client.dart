@@ -3,12 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:color/color.dart';
 import 'package:openrgb/data/constants.dart';
-import 'package:openrgb/data/rgb_controller.dart';
 import 'package:openrgb/openrgb.dart';
 import 'package:quiver/async.dart';
 
-import 'data/command.dart';
 import 'data/header.dart';
 
 class OpenRGBClient {
@@ -112,7 +111,6 @@ class OpenRGBClient {
     bb.add(Uint8List(4)..buffer.asByteData().setUint32(0, 0, Endian.little));
     bb.add(modeIndex.toBytes());
     bb.add(mode.toBytes());
-    print(bb.toBytes());
     try {
       await _send(
         CommandId.updateMode,
@@ -122,5 +120,23 @@ class OpenRGBClient {
     } catch (e) {
       print(e);
     }
+  }
+
+  Future<void> updateLeds(int deviceId, int numColors, Color color) async {
+    if (deviceId >= controllerCount) {
+      throw Exception('Device index out of range!');
+    }
+    final bb = BytesBuilder();
+    bb.add(Uint8List(4)..buffer.asByteData().setUint32(0, 0, Endian.little));
+    bb.add(numColors.toUint16Bytes());
+    final colorBytes = color.toBytes();
+    for (int i = 0; i < numColors; i++) {
+      bb.add(colorBytes);
+    }
+    await _send(
+      CommandId.updateLeds,
+      bb.toBytes(),
+      deviceId: deviceId,
+    );
   }
 }

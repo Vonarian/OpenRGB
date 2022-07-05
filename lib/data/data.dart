@@ -100,9 +100,21 @@ class ModeData {
     builder.add(modeColorMode.toBytes());
     builder.add(modeNumColors.toBytes());
     for (final color in colors) {
-      builder.add(color.toRgbColor().r.toInt().toBytes());
-      builder.add(color.toRgbColor().g.toInt().toBytes());
-      builder.add(color.toRgbColor().b.toInt().toBytes());
+      builder.add(color
+          .toRgbColor()
+          .r
+          .toInt()
+          .toBytes());
+      builder.add(color
+          .toRgbColor()
+          .g
+          .toInt()
+          .toBytes());
+      builder.add(color
+          .toRgbColor()
+          .b
+          .toInt()
+          .toBytes());
       builder.add(0x00.toBytes());
     }
     return builder.toBytes();
@@ -213,11 +225,22 @@ extension ToBytesInt on int {
     bytes.buffer.asByteData().setUint32(0, this, Endian.little);
     return bytes;
   }
+
+  Uint8List toUint16Bytes() {
+    final bytes = Uint16List(2);
+    bytes.buffer.asByteData().setUint16(0, this, Endian.little);
+    return bytes.buffer.asUint8List();
+  }
 }
 
 extension ToBytesString on String {
   Uint8List toBytes() {
-    return ascii.encode('$this\x00');
+    final bb = BytesBuilder();
+    var encodedString = utf8.encode('$this\x00');
+    var encodedLength = encodedString.length.toUint16Bytes();
+    bb.add(encodedLength);
+    bb.add(encodedString);
+    return bb.toBytes();
   }
 }
 
@@ -228,5 +251,18 @@ extension ToUint8List on List<int> {
       self[i].toBytes();
     }
     return (self is Uint8List) ? self : Uint8List.fromList(self);
+  }
+}
+
+extension ColorToBytes on Color {
+  /// Converts a color to a byte list using BytesBuilder.
+  Uint8List toBytes() {
+    final bb = BytesBuilder();
+    final rgbColor = this.toRgbColor();
+    bb.add(rgbColor.r.toInt().toBytes());
+    bb.add(rgbColor.g.toInt().toBytes());
+    bb.add(rgbColor.b.toInt().toBytes());
+    bb.addByte(255);
+    return bb.toBytes();
   }
 }
