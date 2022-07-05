@@ -84,66 +84,28 @@ class ModeData {
   }
 
   Uint8List toBytes() {
-    List<int> bytes = [];
-    final modeNameBytes = modeName.codeUnits;
-    bytes.addAll(modeNameBytes);
-    final modeValueBytes = Uint8List(4);
-    modeValueBytes.buffer.asByteData().setUint32(0, modeValue);
-    bytes.addAll(modeValueBytes);
-    final modeFlagsBytes = Uint8List(4);
-    modeFlagsBytes.buffer.asByteData().setUint32(0, modeFlags);
-    bytes.addAll(modeFlagsBytes);
-    final modeSpeedMinBytes = Uint8List(4);
-    modeSpeedMinBytes.buffer.asByteData().setUint32(0, modeSpeedMin);
-    bytes.addAll(modeSpeedMinBytes);
-    final modeSpeedMaxBytes = Uint8List(4);
-    modeSpeedMaxBytes.buffer.asByteData().setUint32(0, modeSpeedMax);
-    bytes.addAll(modeSpeedMaxBytes);
-    final modeBrightnessMinBytes = Uint8List(4);
-    modeBrightnessMinBytes.buffer.asByteData().setUint32(0, modeBrightnessMin);
-    bytes.addAll(modeBrightnessMinBytes);
-    final modeBrightnessMaxBytes = Uint8List(4);
-    modeBrightnessMaxBytes.buffer.asByteData().setUint32(0, modeBrightnessMax);
-    bytes.addAll(modeBrightnessMaxBytes);
-    final modeColorsMinBytes = Uint8List(4);
-    modeColorsMinBytes.buffer.asByteData().setUint32(0, modeColorsMin);
-    bytes.addAll(modeColorsMinBytes);
-    final modeColorsMaxBytes = Uint8List(4);
-    modeColorsMaxBytes.buffer.asByteData().setUint32(0, modeColorsMax);
-    bytes.addAll(modeColorsMaxBytes);
-    final modeSpeedBytes = Uint8List(4);
-    modeSpeedBytes.buffer.asByteData().setUint32(0, modeSpeed);
-    bytes.addAll(modeSpeedBytes);
-    final modeBrightnessBytes = Uint8List(4);
-    modeBrightnessBytes.buffer.asByteData().setUint32(0, modeBrightness);
-    bytes.addAll(modeBrightnessBytes);
-    final modeDirectionBytes = Uint8List(4);
-    modeDirectionBytes.buffer.asByteData().setUint32(0, modeDirection);
-    bytes.addAll(modeDirectionBytes);
-    final modeColorModeBytes = Uint8List(4);
-    modeColorModeBytes.buffer.asByteData().setUint32(0, modeColorMode);
-    bytes.addAll(modeColorModeBytes);
-    final modeNumColorsBytes = Uint8List(2);
-    modeNumColorsBytes.buffer.asByteData().setUint16(0, modeNumColors);
-    bytes.addAll(modeNumColorsBytes);
-    final colorBytes = Uint8List(4 * modeNumColors);
-    for (Color color in colors) {
-      colorBytes.buffer.asByteData().setUint8(0, color
-          .toRgbColor()
-          .r
-          .toInt());
-      colorBytes.buffer.asByteData().setUint8(1, color
-          .toRgbColor()
-          .g
-          .toInt());
-      colorBytes.buffer.asByteData().setUint8(2, color
-          .toRgbColor()
-          .b
-          .toInt());
-      colorBytes.buffer.asByteData().setUint8(3, 0);
+    final builder = BytesBuilder();
+    builder.add(ascii.encode(modeName));
+    builder.add(modeValue.toBytes());
+    builder.add(modeFlags.toBytes());
+    builder.add(modeSpeedMin.toBytes());
+    builder.add(modeSpeedMax.toBytes());
+    builder.add(modeBrightnessMin.toBytes());
+    builder.add(modeBrightnessMax.toBytes());
+    builder.add(modeColorsMin.toBytes());
+    builder.add(modeColorsMax.toBytes());
+    builder.add(modeSpeed.toBytes());
+    builder.add(modeBrightness.toBytes());
+    builder.add(modeDirection.toBytes());
+    builder.add(modeColorMode.toBytes());
+    builder.add(modeNumColors.toBytes());
+    for (final color in colors) {
+      builder.add(color.toRgbColor().r.toInt().toBytes());
+      builder.add(color.toRgbColor().g.toInt().toBytes());
+      builder.add(color.toRgbColor().b.toInt().toBytes());
+      builder.add(0x00.toBytes());
     }
-    bytes.addAll(colorBytes);
-    return Uint8List.fromList(bytes);
+    return builder.toBytes();
   }
 
   @override
@@ -208,38 +170,17 @@ class ZoneData {
   }
 
   Uint8List toBytes() {
-    List<int> bytes = [];
-    final zoneNameBytes = AsciiCodec().encode(zoneName);
-    bytes.addAll(zoneNameBytes);
-    final zoneTypeBytes = Uint8List(4);
-    zoneTypeBytes.buffer.asByteData().setUint32(0, zoneType);
-    bytes.addAll(zoneTypeBytes);
-    final zoneLedsMinBytes = Uint8List(4);
-    zoneLedsMinBytes.buffer.asByteData().setUint32(0, zoneLedsMin);
-    bytes.addAll(zoneLedsMinBytes);
-    final zoneLedsMaxBytes = Uint8List(4);
-    zoneLedsMaxBytes.buffer.asByteData().setUint32(0, zoneLedsMax);
-    bytes.addAll(zoneLedsMaxBytes);
-    final zoneLedsCountBytes = Uint8List(4);
-    zoneLedsCountBytes.buffer.asByteData().setUint32(0, zoneLedsCount);
-    bytes.addAll(zoneLedsCountBytes);
-    final zoneMatrixLengthBytes = Uint8List(2);
-    zoneMatrixLengthBytes.buffer.asByteData().setUint16(0, zoneMatrix.length);
-    bytes.addAll(zoneMatrixLengthBytes);
-    if (zoneMatrix.length != 0) {
-      final zoneMatrixHeightBytes = Uint8List(2);
-      zoneMatrixHeightBytes.buffer.asByteData().setUint16(0, zoneMatrixHeight);
-      bytes.addAll(zoneMatrixHeightBytes);
-      final zoneMatrixWidthBytes = Uint8List(2);
-      zoneMatrixWidthBytes.buffer.asByteData().setUint16(0, zoneMatrixWidth);
-      bytes.addAll(zoneMatrixWidthBytes);
-      for (int i = 0; i < zoneMatrix.length; i++) {
-        final zoneMatrixBytes = Uint8List(4);
-        zoneMatrixBytes.buffer.asByteData().setUint32(0, zoneMatrix[i]);
-        bytes.addAll(zoneMatrixBytes);
-      }
-    }
-    return Uint8List.fromList(bytes);
+    final builder = BytesBuilder();
+    builder.add(zoneName.toBytes());
+    builder.add(zoneType.toBytes());
+    builder.add(zoneLedsMin.toBytes());
+    builder.add(zoneLedsMax.toBytes());
+    builder.add(zoneLedsCount.toBytes());
+    builder.add(zoneMatrixHeight.toBytes());
+    builder.add(zoneMatrixWidth.toBytes());
+    builder.add(zoneMatrix.toBytes());
+
+    return builder.toBytes();
   }
 
   @override
@@ -263,5 +204,30 @@ class LedData {
   @override
   String toString() {
     return 'LedData ==> ledName: $ledName, ledValue: $ledValue';
+  }
+}
+
+extension ToBytesInt on int {
+  Uint8List toBytes() {
+    final builder = BytesBuilder();
+    final bytes = Uint8List(4);
+    bytes.buffer.asByteData().setUint32(0, this);
+    builder.add(bytes);
+    return builder.toBytes();
+  }
+}
+
+extension ToBytesString on String {
+  Uint8List toBytes() {
+    final builder = BytesBuilder();
+    builder.add(ascii.encode('$this\x00'));
+    return builder.toBytes();
+  }
+}
+
+extension AsUint8List on List<int> {
+  Uint8List toBytes() {
+    final self = this;
+    return (self is Uint8List) ? self : Uint8List.fromList(this);
   }
 }

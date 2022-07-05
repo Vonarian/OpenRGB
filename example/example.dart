@@ -1,4 +1,3 @@
-import 'package:openrgb/data/rgb_controller.dart';
 import 'package:openrgb/openrgb.dart';
 
 Future<void> main() async {
@@ -9,5 +8,9 @@ Future<void> main() async {
     final controller = await oRgb.getControllerData(i);
     controllers.add(controller);
   }
-  await oRgb.setMode(1, controllers[0].modes[2]);
+  for (final controller in controllers) {
+    for (final mode in controller.modes) {
+      await oRgb.setMode(1, mode, 0);
+    }
+  }
 }

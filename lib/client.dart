@@ -104,20 +104,22 @@ class OpenRGBClient {
     return RGBController.fromData(payload.restOfPkt);
   }
 
-  Future<bool> setMode(int deviceId, ModeData mode) async {
+  Future<void> setMode(int deviceId, ModeData mode, int modeIndex) async {
     if (deviceId >= controllerCount) {
       throw Exception('Device index out of range!');
     }
+    final bb = BytesBuilder();
+    bb.add(Uint8List(4)..buffer.asByteData().setUint32(0, 0, Endian.little));
+    bb.add(modeIndex.toBytes());
+    bb.add(mode.toBytes());
     try {
       await _send(
         CommandId.updateMode,
-        mode.toBytes(),
+        bb.toBytes(),
         deviceId: deviceId,
       ).timeout(Duration(seconds: 1));
-      return true;
     } catch (e) {
       print(e);
-      return false;
     }
   }
 }
