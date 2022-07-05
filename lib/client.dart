@@ -112,6 +112,7 @@ class OpenRGBClient {
     bb.add(Uint8List(4)..buffer.asByteData().setUint32(0, 0, Endian.little));
     bb.add(modeIndex.toBytes());
     bb.add(mode.toBytes());
+    print(bb.toBytes());
     try {
       await _send(
         CommandId.updateMode,

@@ -8,9 +8,5 @@ Future<void> main() async {
     final controller = await oRgb.getControllerData(i);
     controllers.add(controller);
   }
-  for (final controller in controllers) {
-    for (final mode in controller.modes) {
-      await oRgb.setMode(1, mode, 0);
-    }
-  }
+  await oRgb.setMode(0, controllers[0].modes[0], 0);
 }

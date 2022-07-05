@@ -85,7 +85,7 @@ class ModeData {
 
   Uint8List toBytes() {
     final builder = BytesBuilder();
-    builder.add(ascii.encode(modeName));
+    builder.add(modeName.toBytes());
     builder.add(modeValue.toBytes());
     builder.add(modeFlags.toBytes());
     builder.add(modeSpeedMin.toBytes());
@@ -95,7 +95,7 @@ class ModeData {
     builder.add(modeColorsMin.toBytes());
     builder.add(modeColorsMax.toBytes());
     builder.add(modeSpeed.toBytes());
-    builder.add(modeBrightness.toBytes());
+    builder.add(240.toBytes());
     builder.add(modeDirection.toBytes());
     builder.add(modeColorMode.toBytes());
     builder.add(modeNumColors.toBytes());
@@ -209,25 +209,24 @@ class LedData {
 
 extension ToBytesInt on int {
   Uint8List toBytes() {
-    final builder = BytesBuilder();
     final bytes = Uint8List(4);
-    bytes.buffer.asByteData().setUint32(0, this);
-    builder.add(bytes);
-    return builder.toBytes();
+    bytes.buffer.asByteData().setUint32(0, this, Endian.little);
+    return bytes;
   }
 }
 
 extension ToBytesString on String {
   Uint8List toBytes() {
-    final builder = BytesBuilder();
-    builder.add(ascii.encode('$this\x00'));
-    return builder.toBytes();
+    return ascii.encode('$this\x00');
   }
 }
 
-extension AsUint8List on List<int> {
+extension ToUint8List on List<int> {
   Uint8List toBytes() {
     final self = this;
-    return (self is Uint8List) ? self : Uint8List.fromList(this);
+    for (int i = 0; i < self.length; i++) {
+      self[i].toBytes();
+    }
+    return (self is Uint8List) ? self : Uint8List.fromList(self);
   }
 }
