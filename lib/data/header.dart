@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:openrgb/constants.dart';
+import 'package:openrgb/data/constants.dart';
 
 class RawNetPacket {
   final int deviceIndex;

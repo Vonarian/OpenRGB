@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:async';
 
-import 'package:openrgb/constants.dart';
+import 'package:openrgb/data/constants.dart';
+import 'package:openrgb/data/rgb_controller.dart';
+import 'package:openrgb/openrgb.dart';
 import 'package:quiver/async.dart';
 
-import 'header.dart';
-import 'command.dart';
+import 'data/command.dart';
+import 'data/header.dart';
 
 class OpenRGBClient {
   final Socket _socket;
@@ -88,9 +90,9 @@ class OpenRGBClient {
     return count;
   }
 
-  Future<int> getControllerData(int deviceId) async {
-    if (deviceId <= controllerCount || deviceId >= controllerCount) {
-      throw Exception('No controller data for this device!');
+  Future<RGBController> getControllerData(int deviceId) async {
+    if (deviceId >= controllerCount) {
+      throw Exception('Device index out of range!');
     }
     await _send(
       CommandId.requestControllerData,
@@ -99,7 +101,23 @@ class OpenRGBClient {
     );
 
     final payload = await _receive();
-    final payloadByteData = ByteData.sublistView(payload.restOfPkt);
-    return payloadByteData.getUint32(0, Endian.little);
+    return RGBController.fromData(payload.restOfPkt);
+  }
+
+  Future<bool> setMode(int deviceId, ModeData mode) async {
+    if (deviceId >= controllerCount) {
+      throw Exception('Device index out of range!');
+    }
+    try {
+      await _send(
+        CommandId.updateMode,
+        mode.toBytes(),
+        deviceId: deviceId,
+      ).timeout(Duration(seconds: 1));
+      return true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 }

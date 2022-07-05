@@ -1,5 +1,5 @@
 library openrgb;
 
 export 'client.dart';
-export 'data.dart';
-export 'command.dart';
+export 'data/command.dart';
+export 'data/data.dart';
