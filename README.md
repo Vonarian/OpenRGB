@@ -1,39 +1,71 @@
-<!-- 
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# OpenRGB
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/guides/libraries/writing-package-pages). 
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-library-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/developing-packages). 
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+OpenRGB Client written in pure Dart for the Dart programming language.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+Communicate with the OpenRGB server to control the RGB LEDs.
 
-## Getting started
+## Installation
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+In the `dependencies:` section of your `pubspec.yaml`, add the following line:
+
+```yaml
+dependencies:
+  openrgb: <latest_version>
+```
 
 ## Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder. 
+Connect to the OpenRGB server. Default value for the IP address is `127.0.0.1` and for the port
+is `6742`. You can also set a custom client name, which is used to identify the client to the
+server. Default value for the client name is `OpenRGB-dart`.
 
 ```dart
-const like = 'sample';
+import 'package:openrgb/openrgb.dart';
+
+Future<void> main() async {
+  final oRgb = await OpenRGBClient.connect();
+}
 ```
 
-## Additional information
+Get all controllers data
 
-TODO: Tell users more about the package: where to find more information, how to 
-contribute to the package, how to file issues, what response they can expect 
-from the package authors, and more.
+```dart
+
+final controllersData = await
+oRgb.getAllControllerData();
+```
+
+Or get a specific controller data
+
+```dart
+
+final controllerData = await
+oRgb.getControllerData(controllerId);
+
+```
+
+Set a single LED's color
+
+```dart
+await
+oRgb.updateSingleLed(deviceId,ledID, color);
+```
+
+Or set all LEDs' colors
+
+```dart
+await
+oRgb.updateLeds(deviceId, numColors, color);
+```
+
+Set a mode for a device
+
+```dart
+
+final deviceId = 0;
+final modeId = 2; // Depending on the device you want to set the mode for and available modes
+await
+oRgb.setMode(deviceId, modeId, color);
+```

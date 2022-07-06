@@ -1,7 +1,7 @@
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:color/color.dart';
+import 'package:openrgb/helpers/extensions.dart';
 
 import '../helpers/byte_data.dart';
 
@@ -83,6 +83,7 @@ class ModeData {
     );
   }
 
+  /// Returns byte data representing this [ModeData] using [BytesBuilder].
   Uint8List toBytes() {
     final builder = BytesBuilder();
     builder.add(modeName.toBytes());
@@ -95,35 +96,58 @@ class ModeData {
     builder.add(modeColorsMin.toBytes());
     builder.add(modeColorsMax.toBytes());
     builder.add(modeSpeed.toBytes());
-    builder.add(240.toBytes());
+    builder.add(modeBrightness.toBytes());
     builder.add(modeDirection.toBytes());
     builder.add(modeColorMode.toBytes());
-    builder.add(modeNumColors.toBytes());
-    for (final color in colors) {
-      builder.add(color
-          .toRgbColor()
-          .r
-          .toInt()
-          .toBytes());
-      builder.add(color
-          .toRgbColor()
-          .g
-          .toInt()
-          .toBytes());
-      builder.add(color
-          .toRgbColor()
-          .b
-          .toInt()
-          .toBytes());
-      builder.add(0x00.toBytes());
+    builder.add(modeNumColors.toUint16Bytes());
+    for (int i = 0; i < modeNumColors; i++) {
+      builder.add(colors[i].toBytes());
     }
-    return builder.toBytes();
+    return builder.takeBytes();
   }
 
   @override
   String toString() {
     return 'ModeData{modeName: $modeName, modeValue: $modeValue, modeFlags: $modeFlags, modeSpeedMin: $modeSpeedMin, modeSpeedMax: $modeSpeedMax, modeBrightnessMin: $modeBrightnessMin, modeBrightnessMax: $modeBrightnessMax, modeColorsMin: $modeColorsMin, modeColorsMax: $modeColorsMax, modeSpeed: $modeSpeed, modeBrightness: $modeBrightness, modeDirection: $modeDirection, modeColorMode: $modeColorMode, modeNumColors: $modeNumColors, colors: $colors}';
   }
+
+  ModeData copyWith({
+    String? modeName,
+    int? modeValue,
+    int? modeFlags,
+    int? modeSpeedMin,
+    int? modeSpeedMax,
+    int? modeBrightnessMin,
+    int? modeBrightnessMax,
+    int? modeColorsMin,
+    int? modeColorsMax,
+    int? modeSpeed,
+    int? modeBrightness,
+    int? modeDirection,
+    int? modeColorMode,
+    int? modeNumColors,
+    List<Color>? colors,
+  }) {
+    return ModeData(
+      modeName: modeName ?? this.modeName,
+      modeValue: modeValue ?? this.modeValue,
+      modeFlags: modeFlags ?? this.modeFlags,
+      modeSpeedMin: modeSpeedMin ?? this.modeSpeedMin,
+      modeSpeedMax: modeSpeedMax ?? this.modeSpeedMax,
+      modeBrightnessMin: modeBrightnessMin ?? this.modeBrightnessMin,
+      modeBrightnessMax: modeBrightnessMax ?? this.modeBrightnessMax,
+      modeColorsMin: modeColorsMin ?? this.modeColorsMin,
+      modeColorsMax: modeColorsMax ?? this.modeColorsMax,
+      modeSpeed: modeSpeed ?? this.modeSpeed,
+      modeBrightness: modeBrightness ?? this.modeBrightness,
+      modeDirection: modeDirection ?? this.modeDirection,
+      modeColorMode: modeColorMode ?? this.modeColorMode,
+      modeNumColors: modeNumColors ?? this.modeNumColors,
+      colors: colors ?? this.colors,
+    );
+  }
+
+  bool get hasSpeed => modeSpeed == 1 << 0;
 }
 
 class ZoneData {
@@ -154,8 +178,8 @@ class ZoneData {
     final zoneLedsMax = wrapper.extractUint32();
     final zoneLedsCount = wrapper.extractUint32();
     final zoneMatrixLength = wrapper.extractUint16();
-    late final zoneMatrixHeight;
-    late final zoneMatrixWidth;
+    late final int zoneMatrixHeight;
+    late final int zoneMatrixWidth;
     final List<int> zoneMatrix = [];
     if (zoneMatrixLength != 0) {
       zoneMatrixHeight = wrapper.extractUint16();
@@ -216,53 +240,5 @@ class LedData {
   @override
   String toString() {
     return 'LedData ==> ledName: $ledName, ledValue: $ledValue';
-  }
-}
-
-extension ToBytesInt on int {
-  Uint8List toBytes() {
-    final bytes = Uint8List(4);
-    bytes.buffer.asByteData().setUint32(0, this, Endian.little);
-    return bytes;
-  }
-
-  Uint8List toUint16Bytes() {
-    final bytes = Uint16List(2);
-    bytes.buffer.asByteData().setUint16(0, this, Endian.little);
-    return bytes.buffer.asUint8List();
-  }
-}
-
-extension ToBytesString on String {
-  Uint8List toBytes() {
-    final bb = BytesBuilder();
-    var encodedString = utf8.encode('$this\x00');
-    var encodedLength = encodedString.length.toUint16Bytes();
-    bb.add(encodedLength);
-    bb.add(encodedString);
-    return bb.toBytes();
-  }
-}
-
-extension ToUint8List on List<int> {
-  Uint8List toBytes() {
-    final self = this;
-    for (int i = 0; i < self.length; i++) {
-      self[i].toBytes();
-    }
-    return (self is Uint8List) ? self : Uint8List.fromList(self);
-  }
-}
-
-extension ColorToBytes on Color {
-  /// Converts a color to a byte list using BytesBuilder.
-  Uint8List toBytes() {
-    final bb = BytesBuilder();
-    final rgbColor = this.toRgbColor();
-    bb.add(rgbColor.r.toInt().toBytes());
-    bb.add(rgbColor.g.toInt().toBytes());
-    bb.add(rgbColor.b.toInt().toBytes());
-    bb.addByte(255);
-    return bb.toBytes();
   }
 }

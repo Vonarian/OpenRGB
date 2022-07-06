@@ -3,5 +3,10 @@ linter:
   rules:
     prefer_single_quotes: true
     always_declare_return_types: true
+    always_specify_types_on_parameters: true
+    always_specify_return_types: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    avoid_print: false
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

@@ -5,22 +5,25 @@ import 'dart:typed_data';
 
 import 'package:color/color.dart';
 import 'package:openrgb/data/constants.dart';
+import 'package:openrgb/helpers/extensions.dart';
 import 'package:openrgb/openrgb.dart';
 import 'package:quiver/async.dart';
 
-import 'data/header.dart';
+import '../data/command.dart';
+import '../data/header.dart';
 
 class OpenRGBClient {
   final Socket _socket;
   final StreamBuffer<int> _streamBuffer;
   late final int serverVersion;
-  int controllerCount = 0;
+  int _controllerCount = 0;
 
   OpenRGBClient._(this._socket, this._streamBuffer);
 
-  static Future<OpenRGBClient> connect(
-    String host,
-    int port, {
+  ///First function to call to connect to the server.
+  static Future<OpenRGBClient> connect({
+    String host = '127.0.0.1',
+    int port = 6742,
     String? clientName,
   }) async {
     var socket = await Socket.connect(host, port);
@@ -44,8 +47,12 @@ class OpenRGBClient {
       nameBytes = ascii.encode('OpenRGB-dart\x00');
     }
     await client._send(CommandId.setClientName, nameBytes);
-
     return client;
+  }
+
+  /// Disconnect from the server and close the socket.
+  Future<void> disconnect() async {
+    await _socket.close();
   }
 
   Future<void> _send(int commandId, Uint8List data, {int deviceId = 0}) async {
@@ -79,18 +86,23 @@ class OpenRGBClient {
     );
   }
 
+  /// Get the number of controllers connected to the server.
   Future<int> getControllerCount() async {
     await _send(CommandId.requestControllerCount, Uint8List(0));
 
     final payload = await _receive();
     final payloadByteData = ByteData.sublistView(payload.restOfPkt);
     final count = payloadByteData.getUint32(0, Endian.little);
-    controllerCount = count;
+    _controllerCount = count;
     return count;
   }
 
+  /// Get controller data of one device with given [deviceId].
   Future<RGBController> getControllerData(int deviceId) async {
-    if (deviceId >= controllerCount) {
+    if (_controllerCount == 0) {
+      await getControllerCount();
+    }
+    if (deviceId >= _controllerCount) {
       throw Exception('Device index out of range!');
     }
     await _send(
@@ -103,27 +115,49 @@ class OpenRGBClient {
     return RGBController.fromData(payload.restOfPkt);
   }
 
-  Future<void> setMode(int deviceId, ModeData mode, int modeIndex) async {
-    if (deviceId >= controllerCount) {
-      throw Exception('Device index out of range!');
+  /// Get controller data of all controllers.
+  Future<List<RGBController>> getAllControllers() async {
+    if (_controllerCount == 0) {
+      await getControllerCount();
     }
-    final bb = BytesBuilder();
-    bb.add(Uint8List(4)..buffer.asByteData().setUint32(0, 0, Endian.little));
-    bb.add(modeIndex.toBytes());
-    bb.add(mode.toBytes());
-    try {
-      await _send(
-        CommandId.updateMode,
-        bb.toBytes(),
-        deviceId: deviceId,
-      ).timeout(Duration(seconds: 1));
-    } catch (e) {
-      print(e);
+    final controllers = <RGBController>[];
+    for (int i = 0; i < _controllerCount; i++) {
+      controllers.add(await getControllerData(i));
     }
+    return controllers;
   }
 
+  /// Sets a mode with given [modeId] on [deviceId]. [color] parameter does not always apply to all modes.
+  Future<void> setMode(int deviceId, int modeID, Color color) async {
+    RGBController targetController = await getControllerData(deviceId);
+    if (deviceId >= _controllerCount) {
+      throw Exception('Device index out of range!');
+    }
+    var targetMode = targetController.modes[modeID];
+    List<Color> colors = [];
+    for (int i = 0; i < targetMode.modeNumColors; i++) {
+      colors.add(color);
+    }
+    targetMode = targetMode.copyWith(colors: colors);
+
+    final bb = BytesBuilder();
+    final dataSize = Uint8List(4)
+      ..buffer
+          .asByteData()
+          .setUint8(0, targetMode.toBytes().lengthInBytes + 84);
+    bb.add(dataSize.toBytes());
+    bb.add(modeID.toBytes());
+    bb.add(targetMode.toBytes());
+    await _send(
+      CommandId.updateMode,
+      bb.toBytes(),
+      deviceId: deviceId,
+    );
+  }
+
+  /// Updates all LEDs with one color.
   Future<void> updateLeds(int deviceId, int numColors, Color color) async {
-    if (deviceId >= controllerCount) {
+    if (deviceId >= _controllerCount) {
       throw Exception('Device index out of range!');
     }
     final bb = BytesBuilder();
@@ -135,6 +169,23 @@ class OpenRGBClient {
     }
     await _send(
       CommandId.updateLeds,
+      bb.toBytes(),
+      deviceId: deviceId,
+    );
+  }
+
+  /// Sets the color of the given LED for the given [deviceId].
+  Future<void> updateSingleLed(int deviceId, int ledID, Color color) async {
+    if (deviceId >= _controllerCount) {
+      throw Exception('Device index out of range!');
+    }
+    final bb = BytesBuilder();
+    final ledIndexBytes = ledID.toBytes();
+    bb.add(ledIndexBytes);
+    final colorBytes = color.toBytes();
+    bb.add(colorBytes);
+    await _send(
+      CommandId.updateSingleLed,
       bb.toBytes(),
       deviceId: deviceId,
     );

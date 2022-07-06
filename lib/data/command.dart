@@ -12,5 +12,6 @@ class CommandId {
   static const int updateZoneLeds = 1051;
   static const int updateSingleLed = 1052;
   static const int setCustomMode = 1100;
-  static const int updateMode = 110;
+  static const int updateMode = 1101;
+  static const int saveMode = 1102;
 }

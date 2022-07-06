@@ -1,7 +1,7 @@
 name: openrgb
 description: OpenRGB Dart Client
 version: 0.0.1
-homepage:
+homepage: https://github.com/Vonarian/OpenRGB
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
@@ -11,3 +11,4 @@ dependencies:
   quiver:
 
 dev_dependencies:
+  flutter_lints: 2.0.1
