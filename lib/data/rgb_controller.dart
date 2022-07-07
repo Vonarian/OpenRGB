@@ -32,8 +32,8 @@ class RGBController {
   factory RGBController.fromData(Uint8List data) {
     final buffer = data.buffer;
     ByteDataWrapper wrapper = ByteDataWrapper(ByteData.view(buffer));
-    final size = wrapper.extractUint32();
-    final int type = wrapper.extractUint32();
+    wrapper.extractUint32(); // Skip data size
+    wrapper.extractUint32(); //Skip type
     final String name = wrapper.extractString();
     final String vendor = wrapper.extractString();
     final String description = wrapper.extractString();
@@ -41,7 +41,7 @@ class RGBController {
     final String serial = wrapper.extractString();
     final String location = wrapper.extractString();
     final int numModes = wrapper.extractUint16();
-    final int activeMode = wrapper.extractUint32();
+    wrapper.extractUint32(); // Skip active mode
     final List<ModeData> modes = <ModeData>[];
     for (int i = 0; i < numModes; i++) {
       ModeData modeData = ModeData.fromBuffer(wrapper);

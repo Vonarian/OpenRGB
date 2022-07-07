@@ -147,7 +147,45 @@ class ModeData {
     );
   }
 
-  bool get hasSpeed => modeSpeed == 1 << 0;
+  Map<String, dynamic> toMap() {
+    return {
+      'modeName': modeName,
+      'modeValue': modeValue,
+      'modeFlags': modeFlags,
+      'modeSpeedMin': modeSpeedMin,
+      'modeSpeedMax': modeSpeedMax,
+      'modeBrightnessMin': modeBrightnessMin,
+      'modeBrightnessMax': modeBrightnessMax,
+      'modeColorsMin': modeColorsMin,
+      'modeColorsMax': modeColorsMax,
+      'modeSpeed': modeSpeed,
+      'modeBrightness': modeBrightness,
+      'modeDirection': modeDirection,
+      'modeColorMode': modeColorMode,
+      'modeNumColors': modeNumColors,
+      'colors': colors,
+    };
+  }
+
+  factory ModeData.fromMap(Map<String, dynamic> map) {
+    return ModeData(
+      modeName: map['modeName'] as String,
+      modeValue: map['modeValue'] as int,
+      modeFlags: map['modeFlags'] as int,
+      modeSpeedMin: map['modeSpeedMin'] as int,
+      modeSpeedMax: map['modeSpeedMax'] as int,
+      modeBrightnessMin: map['modeBrightnessMin'] as int,
+      modeBrightnessMax: map['modeBrightnessMax'] as int,
+      modeColorsMin: map['modeColorsMin'] as int,
+      modeColorsMax: map['modeColorsMax'] as int,
+      modeSpeed: map['modeSpeed'] as int,
+      modeBrightness: map['modeBrightness'] as int,
+      modeDirection: map['modeDirection'] as int,
+      modeColorMode: map['modeColorMode'] as int,
+      modeNumColors: map['modeNumColors'] as int,
+      colors: map['colors'] as List<Color>,
+    );
+  }
 }
 
 class ZoneData {
@@ -223,22 +261,97 @@ class ZoneData {
   String toString() {
     return 'ZoneData{zoneName: $zoneName, zoneType: $zoneType, zoneLedsMin: $zoneLedsMin, zoneLedsMax: $zoneLedsMax, zoneLedsCount: $zoneLedsCount, zoneMatrixHeight: $zoneMatrixHeight, zoneMatrixWidth: $zoneMatrixWidth, zoneMatrix: $zoneMatrix}';
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'zoneName': zoneName,
+      'zoneType': zoneType,
+      'zoneLedsMin': zoneLedsMin,
+      'zoneLedsMax': zoneLedsMax,
+      'zoneLedsCount': zoneLedsCount,
+      'zoneMatrixHeight': zoneMatrixHeight,
+      'zoneMatrixWidth': zoneMatrixWidth,
+      'zoneMatrix': zoneMatrix,
+    };
+  }
+
+  factory ZoneData.fromMap(Map<String, dynamic> map) {
+    return ZoneData(
+      zoneName: map['zoneName'] as String,
+      zoneType: map['zoneType'] as int,
+      zoneLedsMin: map['zoneLedsMin'] as int,
+      zoneLedsMax: map['zoneLedsMax'] as int,
+      zoneLedsCount: map['zoneLedsCount'] as int,
+      zoneMatrixHeight: map['zoneMatrixHeight'] as int,
+      zoneMatrixWidth: map['zoneMatrixWidth'] as int,
+      zoneMatrix: map['zoneMatrix'] as List<int>,
+    );
+  }
+
+  ZoneData copyWith({
+    String? zoneName,
+    int? zoneType,
+    int? zoneLedsMin,
+    int? zoneLedsMax,
+    int? zoneLedsCount,
+    int? zoneMatrixHeight,
+    int? zoneMatrixWidth,
+    List<int>? zoneMatrix,
+  }) {
+    return ZoneData(
+      zoneName: zoneName ?? this.zoneName,
+      zoneType: zoneType ?? this.zoneType,
+      zoneLedsMin: zoneLedsMin ?? this.zoneLedsMin,
+      zoneLedsMax: zoneLedsMax ?? this.zoneLedsMax,
+      zoneLedsCount: zoneLedsCount ?? this.zoneLedsCount,
+      zoneMatrixHeight: zoneMatrixHeight ?? this.zoneMatrixHeight,
+      zoneMatrixWidth: zoneMatrixWidth ?? this.zoneMatrixWidth,
+      zoneMatrix: zoneMatrix ?? this.zoneMatrix,
+    );
+  }
 }
 
 class LedData {
   String ledName;
   int ledValue;
 
-  LedData(this.ledName, this.ledValue);
-
   factory LedData.fromBuffer(ByteDataWrapper wrapper) {
     final ledName = wrapper.extractString();
     final ledValue = wrapper.extractUint32();
-    return LedData(ledName, ledValue);
+    return LedData(ledName: ledName, ledValue: ledValue);
   }
 
   @override
   String toString() {
     return 'LedData ==> ledName: $ledName, ledValue: $ledValue';
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'ledName': ledName,
+      'ledValue': ledValue,
+    };
+  }
+
+  factory LedData.fromMap(Map<String, dynamic> map) {
+    return LedData(
+      ledName: map['ledName'] as String,
+      ledValue: map['ledValue'] as int,
+    );
+  }
+
+  LedData({
+    required this.ledName,
+    required this.ledValue,
+  });
+
+  LedData copyWith({
+    String? ledName,
+    int? ledValue,
+  }) {
+    return LedData(
+      ledName: ledName ?? this.ledName,
+      ledValue: ledValue ?? this.ledValue,
+    );
   }
 }
