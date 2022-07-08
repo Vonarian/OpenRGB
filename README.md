@@ -1,4 +1,3 @@
-
 # OpenRGB
 
 OpenRGB Client written in pure Dart for the Dart programming language.
@@ -34,27 +33,31 @@ Get all controllers data
 
 ```dart
 
-final controllersData = await oRgb.getAllControllerData();
+final controllersData = await
+oRgb.getAllControllerData();
 ```
 
 Or get a specific controller data
 
 ```dart
 
-final controllerData = await oRgb.getControllerData(controllerId);
+final controllerData = await
+oRgb.getControllerData(controllerId);
 
 ```
 
 Set a single LED's color
 
 ```dart
-await oRgb.updateSingleLed(deviceId,ledID, color);
+await
+oRgb.updateSingleLed(deviceId,ledID, color);
 ```
 
 Or set all LEDs' colors
 
 ```dart
-await oRgb.updateLeds(deviceId, numColors, color);
+await
+oRgb.updateLeds(deviceId, numColors, color);
 ```
 
 Set a mode for a device
@@ -63,5 +66,13 @@ Set a mode for a device
 
 final deviceId = 0;
 final modeId = 2; // Depending on the device you want to set the mode for and available modes
-await oRgb.setMode(deviceId, modeId, color);
+await
+oRgb.setMode(deviceId, modeId, color);
+```
+
+```dart
+
+final deviceId = 0;
+await
+oRgb.setCustomMode(deviceId);
 ```
