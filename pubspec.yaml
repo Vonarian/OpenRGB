@@ -1,6 +1,6 @@
 name: openrgb
 description: OpenRGB Dart Client to communicate with OpenRGB Server and control RGB LEDs. Protocol Version 3.
-version: 0.2.2
+version: 0.2.3
 homepage: https://github.com/Vonarian/OpenRGB
 
 environment:

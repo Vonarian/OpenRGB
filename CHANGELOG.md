@@ -9,6 +9,11 @@
 ## 0.2.0
 
 * `setCustomMode` method has been added to client
+
 ## 0.2.2
 
 * Add `activeMode` field to RGBController
+
+# 0.2.3
+
+* Add color mode getters to `ModeData` class
