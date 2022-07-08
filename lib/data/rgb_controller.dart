@@ -11,6 +11,7 @@ class RGBController {
   final String version;
   final String serial;
   final String location;
+  final int activeMode;
   final List<ModeData> modes;
   final List<ZoneData> zones;
   final List<LedData> leds;
@@ -23,6 +24,7 @@ class RGBController {
     required this.version,
     required this.serial,
     required this.location,
+    required this.activeMode,
     required this.modes,
     required this.zones,
     required this.leds,
@@ -41,7 +43,7 @@ class RGBController {
     final String serial = wrapper.extractString();
     final String location = wrapper.extractString();
     final int numModes = wrapper.extractUint16();
-    wrapper.extractUint32(); // Skip active mode
+    final int activeModeId = wrapper.extractUint32();
     final List<ModeData> modes = <ModeData>[];
     for (int i = 0; i < numModes; i++) {
       ModeData modeData = ModeData.fromBuffer(wrapper);
@@ -76,13 +78,13 @@ class RGBController {
       version: version,
       serial: serial,
       location: location,
+      activeMode: activeModeId,
       modes: modes,
       zones: zones,
       leds: leds,
       colors: colors,
     );
   }
-
 
   @override
   String toString() {
