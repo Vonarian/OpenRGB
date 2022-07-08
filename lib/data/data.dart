@@ -22,6 +22,14 @@ class ModeData {
   int modeNumColors;
   List<Color> colors;
 
+  bool get modeColorNone => modeColorMode == 0;
+
+  bool get modeColorPerLED => modeColorMode == 1;
+
+  bool get modeColorModeSpecific => modeColorMode == 2;
+
+  bool get modeColorRandom => modeColorMode == 3;
+
   ModeData({
     required this.modeName,
     required this.modeValue,
