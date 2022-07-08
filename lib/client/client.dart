@@ -141,10 +141,7 @@ class OpenRGBClient {
     targetMode = targetMode.copyWith(colors: colors);
 
     final bb = BytesBuilder();
-    final dataSize = Uint8List(4)
-      ..buffer
-          .asByteData()
-          .setUint8(0, targetMode.toBytes().lengthInBytes + 84);
+    final dataSize = Uint8List(4)..buffer.asByteData().setUint8(0, targetMode.toBytes().lengthInBytes + 84);
     bb.add(dataSize.toBytes());
     bb.add(modeID.toBytes());
     bb.add(targetMode.toBytes());
@@ -174,7 +171,7 @@ class OpenRGBClient {
     );
   }
 
-  /// Sets the color of the given LED for the given [deviceId].
+  /// Sets the [color] of the given LED for the given [deviceId].
   Future<void> updateSingleLed(int deviceId, int ledID, Color color) async {
     if (deviceId >= _controllerCount) {
       throw Exception('Device index out of range!');
@@ -187,6 +184,18 @@ class OpenRGBClient {
     await _send(
       CommandId.updateSingleLed,
       bb.toBytes(),
+      deviceId: deviceId,
+    );
+  }
+
+  /// Sets custom mode for given [deviceId].
+  Future<void> setCustomMode(int deviceId) async {
+    if (deviceId >= _controllerCount) {
+      throw Exception('Device index out of range!');
+    }
+    await _send(
+      CommandId.setCustomMode,
+      Uint8List(0),
       deviceId: deviceId,
     );
   }
