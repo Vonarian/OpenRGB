@@ -14,6 +14,10 @@
 
 * Add `activeMode` field to RGBController
 
-# 0.2.3
+## 0.2.3
 
 * Add color mode getters to `ModeData` class
+
+## 0.2.4
+
+* Add deviceListUpdated stream

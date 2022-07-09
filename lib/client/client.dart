@@ -170,10 +170,7 @@ class OpenRGBClient {
     targetMode = targetMode.copyWith(colors: colors);
 
     final bb = BytesBuilder();
-    final dataSize = Uint8List(4)
-      ..buffer
-          .asByteData()
-          .setUint8(0, targetMode.toBytes().lengthInBytes + 84);
+    final dataSize = Uint8List(4)..buffer.asByteData().setUint8(0, targetMode.toBytes().lengthInBytes + 84);
     bb.add(dataSize.toBytes());
     bb.add(modeID.toBytes());
     bb.add(targetMode.toBytes());
@@ -221,6 +218,7 @@ class OpenRGBClient {
   }
 
   /// Sets custom mode for given [deviceId].
+  /// Custom mode is a mode that allows you to set the colors of the LEDs individually (Depending on device's capabilities).
   Future<void> setCustomMode(int deviceId) async {
     if (deviceId >= _controllerCount) {
       throw Exception('Device index out of range!');
