@@ -3,6 +3,7 @@ class CommandId {
   static const int requestControllerData = 1;
   static const int requestProtocolVersion = 40;
   static const int setClientName = 50;
+  static const int deviceListUpdated = 100;
   static const int requestProfiles = 150;
   static const int saveProfile = 151;
   static const int loadProfile = 152;

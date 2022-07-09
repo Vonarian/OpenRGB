@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:async/async.dart';
 import 'package:color/color.dart';
 import 'package:openrgb/data/constants.dart';
 import 'package:openrgb/helpers/extensions.dart';
@@ -14,31 +15,45 @@ import '../data/header.dart';
 
 class OpenRGBClient {
   final Socket _socket;
-  final StreamBuffer<int> _streamBuffer;
+  late final StreamQueue<RawNetPacket> _rx;
+  late final StreamRouter<RawNetPacket> _router;
+
+  /// Server version
   late final int serverVersion;
+
+  /// Stream to listen to be notified of devices connection and disconnections.
+  late final Stream<void> deviceListUpdated;
+
   int _controllerCount = 0;
 
-  OpenRGBClient._(this._socket, this._streamBuffer);
+  OpenRGBClient._(this._socket) {
+    // Pipe the received data into the StreamBuffer.
+    final streamBuffer = StreamBuffer<int>();
+    _socket.cast<List<int>>().pipe(streamBuffer);
+    // Decode the received messages in a raw packet stream.
+    final receiveStream = _decodeLoop(streamBuffer);
+    // Route the non-update packets out of [_rx] so we avoid a potential issue
+    // with the client receiving unexpected data and breaking after a new device
+    // is connected in the host machine.
+    _router = StreamRouter(receiveStream);
+    _rx = StreamQueue(
+      _router.route((event) => event.commandId != CommandId.deviceListUpdated),
+    );
+    // Expose a stream of updates for API users to refresh their data.
+    deviceListUpdated = _router.route(
+      (event) => event.commandId == CommandId.deviceListUpdated,
+    );
+  }
 
-  ///First function to call to connect to the server.
-  static Future<OpenRGBClient> connect({
-    String host = '127.0.0.1',
-    int port = 6742,
-    String? clientName,
-  }) async {
-    var socket = await Socket.connect(host, port);
-    var streamBuffer = StreamBuffer<int>();
-
-    socket.cast<List<int>>().pipe(streamBuffer);
-    var client = OpenRGBClient._(socket, streamBuffer);
+  Future<void> _doHandshake(String? clientName) async {
     // Get Server version
-    await client._send(
+    await _send(
       CommandId.requestProtocolVersion,
       Uint8List.fromList([3, 0, 0, 0]),
     ); // V3
-    final response = await client._receive();
+    final response = await _rx.next;
     // Since it's LE, the first byte is the server's version.
-    client.serverVersion = response.restOfPkt.first;
+    serverVersion = response.restOfPkt.first;
     // Send client name
     final Uint8List nameBytes;
     if (clientName != null) {
@@ -46,13 +61,26 @@ class OpenRGBClient {
     } else {
       nameBytes = ascii.encode('OpenRGB-dart\x00');
     }
-    await client._send(CommandId.setClientName, nameBytes);
+    await _send(CommandId.setClientName, nameBytes);
+  }
+
+  ///First function to call to connect to the server.
+  static Future<OpenRGBClient> connect({
+    String host = '127.0.0.1',
+    int port = 6742,
+    String? clientName,
+  }) async {
+    final socket = await Socket.connect(host, port);
+    final client = OpenRGBClient._(socket);
+    await client._doHandshake(clientName);
     return client;
   }
 
   /// Disconnect from the server and close the socket.
   Future<void> disconnect() async {
     await _socket.close();
+    await _rx.cancel();
+    await _router.close();
   }
 
   Future<void> _send(int commandId, Uint8List data, {int deviceId = 0}) async {
@@ -65,32 +93,33 @@ class OpenRGBClient {
     await _socket.flush();
   }
 
-  Future<RawNetPacket> _receive() async {
-    // TODO: Make this another stream and queue messages in a streamqueue skipping server_only messages
-    final buffer = await _streamBuffer.read(kHeaderLength);
-    final headerData = Uint8List.fromList(buffer);
-    if (ascii.decode(headerData.sublist(0, 4)) != kHeaderMagic) {
-      throw Exception('Non-valid magic ID!');
+  static Stream<RawNetPacket> _decodeLoop(StreamBuffer<int> sb) async* {
+    while (true) {
+      final buffer = await sb.read(kHeaderLength);
+      final headerData = Uint8List.fromList(buffer);
+      if (ascii.decode(headerData.sublist(0, 4)) != kHeaderMagic) {
+        throw Exception('Non-valid magic ID!');
+      }
+
+      final ByteData byteDataView = ByteData.sublistView(headerData, 4);
+
+      final devIndex = byteDataView.getUint32(0, Endian.little);
+      final commandId = byteDataView.getUint32(4, Endian.little);
+      final dataLength = byteDataView.getUint32(8, Endian.little);
+
+      yield RawNetPacket(
+        deviceIndex: devIndex,
+        commandId: commandId,
+        restOfPkt: Uint8List.fromList(await sb.read(dataLength)),
+      );
     }
-
-    final ByteData byteDataView = ByteData.sublistView(headerData, 4);
-
-    final devIndex = byteDataView.getUint32(0, Endian.little);
-    final commandId = byteDataView.getUint32(4, Endian.little);
-    final dataLength = byteDataView.getUint32(8, Endian.little);
-
-    return RawNetPacket(
-      deviceIndex: devIndex,
-      commandId: commandId,
-      restOfPkt: Uint8List.fromList(await _streamBuffer.read(dataLength)),
-    );
   }
 
   /// Get the number of controllers connected to the server.
   Future<int> getControllerCount() async {
     await _send(CommandId.requestControllerCount, Uint8List(0));
 
-    final payload = await _receive();
+    final payload = await _rx.next;
     final payloadByteData = ByteData.sublistView(payload.restOfPkt);
     final count = payloadByteData.getUint32(0, Endian.little);
     _controllerCount = count;
@@ -111,7 +140,7 @@ class OpenRGBClient {
       deviceId: deviceId,
     );
 
-    final payload = await _receive();
+    final payload = await _rx.next;
     return RGBController.fromData(payload.restOfPkt);
   }
 
@@ -141,7 +170,10 @@ class OpenRGBClient {
     targetMode = targetMode.copyWith(colors: colors);
 
     final bb = BytesBuilder();
-    final dataSize = Uint8List(4)..buffer.asByteData().setUint8(0, targetMode.toBytes().lengthInBytes + 84);
+    final dataSize = Uint8List(4)
+      ..buffer
+          .asByteData()
+          .setUint8(0, targetMode.toBytes().lengthInBytes + 84);
     bb.add(dataSize.toBytes());
     bb.add(modeID.toBytes());
     bb.add(targetMode.toBytes());
