@@ -3,12 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:color/color.dart';
-import 'package:openrgb/helpers/extensions.dart';
 
 import '../data/command.dart';
 import '../data/constants.dart';
 import '../data/header.dart';
 import '../data/rgb_controller.dart';
+import '../helpers/extensions.dart';
 
 class OpenRGBSyncClient {
   final RawSynchronousSocket _socket;

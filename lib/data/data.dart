@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:color/color.dart';
-import 'package:openrgb/helpers/extensions.dart';
 
 import '../helpers/byte_data.dart';
+import '../helpers/extensions.dart';
 
 class ModeData {
   String modeName;

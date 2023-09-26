@@ -5,11 +5,11 @@ import 'dart:typed_data';
 
 import 'package:async/async.dart';
 import 'package:color/color.dart';
-import 'package:openrgb/data/constants.dart';
-import 'package:openrgb/helpers/extensions.dart';
-import 'package:openrgb/openrgb.dart';
 import 'package:quiver/async.dart';
 
+import '../data/constants.dart';
+import '../data/rgb_controller.dart';
+import '../helpers/extensions.dart';
 import '../data/command.dart';
 import '../data/header.dart';
 
@@ -170,7 +170,10 @@ class OpenRGBClient {
     targetMode = targetMode.copyWith(colors: colors);
 
     final bb = BytesBuilder();
-    final dataSize = Uint8List(4)..buffer.asByteData().setUint8(0, targetMode.toBytes().lengthInBytes + 84);
+    final dataSize = Uint8List(4)
+      ..buffer
+          .asByteData()
+          .setUint8(0, targetMode.toBytes().lengthInBytes + 84);
     bb.add(dataSize.toBytes());
     bb.add(modeID.toBytes());
     bb.add(targetMode.toBytes());

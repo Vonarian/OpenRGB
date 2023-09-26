@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
 import 'package:color/color.dart';
-import 'package:openrgb/helpers/byte_data.dart';
-import 'package:openrgb/openrgb.dart';
+import '../helpers/byte_data.dart';
+import 'data.dart';
 
 class RGBController {
   final String name;
