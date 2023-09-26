@@ -22,7 +22,7 @@
 
 * Add deviceListUpdated stream
 
-## 0.3.5
+## 0.2.5
 
 * Export color package.
 * Update example.
