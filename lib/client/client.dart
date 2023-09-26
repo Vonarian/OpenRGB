@@ -156,7 +156,7 @@ class OpenRGBClient {
     return controllers;
   }
 
-  /// Sets a mode with given [modeId] on [deviceId]. [color] parameter does not always apply to all modes.
+  /// Sets a mode with given [modeID] on [deviceId]. [color] parameter does not always apply to all modes.
   Future<void> setMode(int deviceId, int modeID, Color color) async {
     RGBController targetController = await getControllerData(deviceId);
     if (deviceId >= _controllerCount) {

@@ -118,7 +118,7 @@ class OpenRGBSyncClient {
     return controllers;
   }
 
-  /// Sets a mode with given [modeId] on [deviceId]. [color] parameter does not always apply to all modes.
+  /// Sets a mode with given [modeID] on [deviceId]. [color] parameter does not always apply to all modes.
   void setMode(int deviceId, int modeID, Color color) {
     RGBController targetController = getControllerData(deviceId);
     if (deviceId >= _controllerCount) {
