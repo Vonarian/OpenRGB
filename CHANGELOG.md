@@ -21,3 +21,9 @@
 ## 0.2.4
 
 * Add deviceListUpdated stream
+
+## 0.3.5
+
+* Export color package.
+* Update example.
+* Improve package code readability.

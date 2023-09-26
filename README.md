@@ -25,7 +25,10 @@ server. Default value for the client name is `OpenRGB-dart`.
 import 'package:openrgb/openrgb.dart';
 
 Future<void> main() async {
-  final oRgb = await OpenRGBClient.connect();
+  // Async Client
+  final asyncClient = await OpenRGBClient.connect();
+  // Sync Client
+  final syncClient = OpenRGBSyncClient.connect();
 }
 ```
 
